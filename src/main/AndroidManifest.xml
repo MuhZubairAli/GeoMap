@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="pk.gov.pbs.geomap">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:requestLegacyExternalStorage="true">
+        <meta-data android:name="MAPBOX_MAPID" android:value="mapbox.mapbox-streets-v8" />
+        <meta-data android:name="MAPBOX_ACCESS_TOKEN" android:value="pk.eyJ1IjoibXVoenViYWlyYWxpIiwiYSI6ImNrcjIyZWZ2ZTFxcXIyb254cHl0OGtueTcifQ.mYLmJNlVaaqgz32QryNB_g" />
+
+        <activity android:theme="@style/Theme.AppCompat.DayNight.NoActionBar" android:name=".SampleGeoMapActivity" />
+    </application>
+</manifest>
