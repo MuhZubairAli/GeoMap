@@ -42,7 +42,6 @@ import org.osmdroid.views.overlay.Polygon;
 import java.util.ArrayList;
 
 import egolabsapps.basicodemine.offlinemap.Interfaces.GeoPointListener;
-import egolabsapps.basicodemine.offlinemap.Utils.MapUtils;
 import pk.gov.pbs.geomap.utils.CustomMapListener;
 import pk.gov.pbs.geomap.utils.CustomMapUtils;
 import pk.gov.pbs.geomap.views.CustomOfflineMapView;
@@ -67,9 +66,9 @@ public class SampleGeoMapActivity extends AppCompatActivity implements CustomMap
     private final BroadcastReceiver GPS_PROVIDER_ACCESS = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equalsIgnoreCase(LocationService.BROADCAST_ACTION_LOCATION_CHANGED)) {
+            if (intent.getAction().equalsIgnoreCase(LocationService.BROADCAST_RECEIVER_ACTION_LOCATION_CHANGED)) {
                 Log.d(TAG, "onReceive: Broadcast Received for change of location");
-                Location location = intent.getParcelableExtra(LocationService.BROADCAST_EXTRA_LOCATION_PARCEL);
+                Location location = intent.getParcelableExtra(LocationService.BROADCAST_EXTRA_LOCATION_DATA);
                 if (!isFinishing() && !isDestroyed())
                     SampleGeoMapActivity.this.callback.onLocationChange(location);
             }else
@@ -88,8 +87,8 @@ public class SampleGeoMapActivity extends AppCompatActivity implements CustomMap
         locations.add(new GeoPoint(33.679398679965736, 73.03464969598426));
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(LocationService.BROADCAST_ACTION_LOCATION_CHANGED);
-        intentFilter.addAction(LocationService.BROADCAST_ACTION_PROVIDER_DISABLED);
+        intentFilter.addAction(LocationService.BROADCAST_RECEIVER_ACTION_LOCATION_CHANGED);
+        intentFilter.addAction(LocationService.BROADCAST_RECEIVER_ACTION_PROVIDER_DISABLED);
         registerReceiver(GPS_PROVIDER_ACCESS, intentFilter);
     }
 
