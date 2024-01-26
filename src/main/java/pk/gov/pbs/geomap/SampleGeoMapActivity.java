@@ -310,7 +310,7 @@ public class SampleGeoMapActivity extends AppCompatActivity implements CustomMap
     private void checkLocationAndRunCallback(ILocationChangeCallback callback){
         if (mLocationService.getLocation() == null) {
             if (callback != null)
-                mLocationService.setLocationChangedCallback(callback);
+                mLocationService.addLocalLocationChangedCallback(this, callback);
         } else {
             if (callback != null)
                 callback.onLocationChange(mLocationService.getLocation());
