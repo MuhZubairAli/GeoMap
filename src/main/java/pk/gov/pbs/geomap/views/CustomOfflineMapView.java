@@ -137,7 +137,7 @@ public class CustomOfflineMapView extends OfflineMapView {
         return addKmlDocumentOverlay(kmlDocument, mapUtils.getMap().getOverlays().size());
     }
     public FolderOverlay addKmlDocumentOverlay(KmlDocument kmlDocument, int index){
-        Drawable defaultMarker = AppCompatResources.getDrawable(getContext(), R.drawable.marker_default);
+        Drawable defaultMarker = AppCompatResources.getDrawable(getContext(), org.osmdroid.bonuspack.R.drawable.marker_default);
         Bitmap defaultBitmap = ((BitmapDrawable) defaultMarker).getBitmap();
         Style defaultStyle = new Style(defaultBitmap, Color.argb(125,0,0,180) , 5f, Color.argb(50,0,0,100)); // line color = 0x901010AA
         FolderOverlay geoJsonOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(getMapUtils().getMap(), defaultStyle, null, kmlDocument);

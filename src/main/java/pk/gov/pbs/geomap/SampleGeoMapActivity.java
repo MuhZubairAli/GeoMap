@@ -46,6 +46,7 @@ import pk.gov.pbs.geomap.utils.CustomMapListener;
 import pk.gov.pbs.geomap.utils.CustomMapUtils;
 import pk.gov.pbs.geomap.views.CustomOfflineMapView;
 import pk.gov.pbs.utils.Constants;
+import pk.gov.pbs.utils.exceptions.InvalidIndexException;
 import pk.gov.pbs.utils.location.ILocationChangeCallback;
 import pk.gov.pbs.utils.location.LocationService;
 
@@ -156,7 +157,7 @@ public class SampleGeoMapActivity extends AppCompatActivity implements CustomMap
         mBoundaries = new ArrayList<>();
         mBoundaries.add(kmlDocument);
 
-        Drawable defaultMarker = getResources().getDrawable(R.drawable.marker_default);
+        Drawable defaultMarker = getResources().getDrawable(org.osmdroid.bonuspack.R.drawable.marker_default);
         Bitmap defaultBitmap = ((BitmapDrawable) defaultMarker).getBitmap();
         Style defaultStyle = new Style(defaultBitmap,Color.argb(125,0,180,0) , 5f, 0x20AA1010); // line color = 0x901010AA
         FolderOverlay geoJsonOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(mapView, defaultStyle, null, kmlDocument);
