@@ -46,7 +46,6 @@ import pk.gov.pbs.geomap.utils.CustomMapListener;
 import pk.gov.pbs.geomap.utils.CustomMapUtils;
 import pk.gov.pbs.geomap.views.CustomOfflineMapView;
 import pk.gov.pbs.utils.Constants;
-import pk.gov.pbs.utils.exceptions.InvalidIndexException;
 import pk.gov.pbs.utils.location.ILocationChangeCallback;
 import pk.gov.pbs.utils.location.LocationService;
 
