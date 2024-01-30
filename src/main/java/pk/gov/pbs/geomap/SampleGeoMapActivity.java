@@ -83,6 +83,7 @@ public class SampleGeoMapActivity extends AppCompatActivity implements CustomMap
 
         offlineMapView = findViewById(R.id.map);
         offlineMapView.init(this, this);
+
         locations = new ArrayList<>();
         locations.add(new GeoPoint(33.679398679965736, 73.03464969598426));
 
