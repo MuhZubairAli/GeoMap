@@ -40,7 +40,7 @@ public class OfflineMapView extends FrameLayout implements CustomMapListener, Pe
     public void init(Activity activity, CustomMapListener mapListener) {
         this.activity = activity;
         this.mapListener = mapListener;
-        attrZoomLevel = 16.0f;
+        attrZoomLevel = 14.0f;
         if (!PermissionUtils.hasPermissions(activity)) {
             activity.startActivity(new Intent(activity, PermissionActivity.class));
         } else {
@@ -128,7 +128,7 @@ public class OfflineMapView extends FrameLayout implements CustomMapListener, Pe
     }
 
     public void onReject() {
-        Toast.makeText(this.activity, "error", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this.activity, "error: permission not granted", Toast.LENGTH_SHORT).show();
     }
 
     public CustomMapUtils getMapUtils() {

@@ -16,6 +16,7 @@ import androidx.appcompat.content.res.AppCompatResources;
 import org.osmdroid.bonuspack.kml.KmlDocument;
 import org.osmdroid.bonuspack.kml.Style;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.FolderOverlay;
 import org.osmdroid.views.overlay.Marker;
 
@@ -136,6 +137,7 @@ public class CustomOfflineMapView extends OfflineMapView {
     public FolderOverlay addKmlDocumentOverlay(KmlDocument kmlDocument){
         return addKmlDocumentOverlay(kmlDocument, mapUtils.getMap().getOverlays().size());
     }
+
     public FolderOverlay addKmlDocumentOverlay(KmlDocument kmlDocument, int index){
         Drawable defaultMarker = AppCompatResources.getDrawable(getContext(), org.osmdroid.bonuspack.R.drawable.marker_default);
         Bitmap defaultBitmap = ((BitmapDrawable) defaultMarker).getBitmap();
@@ -146,5 +148,67 @@ public class CustomOfflineMapView extends OfflineMapView {
         getMapUtils().getMap().invalidate();
 
         return geoJsonOverlay;
+    }
+
+    public static class MapUtils {
+        public static Marker addMarker(MapView map, GeoPoint position, int icon){
+            Marker marker = new Marker(map);
+            marker.setIcon(AppCompatResources.getDrawable(map.getContext(), icon));
+            marker.setPosition(position);
+            map.getOverlays().add(marker);
+            map.invalidate();
+            return marker;
+        }
+
+        public static Marker addMarker(MapView map, GeoPoint position){
+            Marker marker = new Marker(map);
+            marker.setIcon(AppCompatResources.getDrawable(map.getContext(), R.drawable.ic_location_pin));
+            marker.setPosition(position);
+            map.getOverlays().add(marker);
+            map.invalidate();
+            return marker;
+        }
+
+        public static FolderOverlay loadGeoJSON(MapView map, File geoJSON){
+            if (geoJSON == null || !geoJSON.exists())
+                return null;
+
+            KmlDocument kmlDocument = new KmlDocument();
+            kmlDocument.parseGeoJSON(geoJSON);
+
+            return addKmlDocumentOverlay(map, kmlDocument);
+        }
+
+        public static FolderOverlay loadGeoJSON(MapView map, String geoJSON){
+            if (geoJSON == null)
+                return null;
+
+            KmlDocument kmlDocument = new KmlDocument();
+            kmlDocument.parseGeoJSON(geoJSON);
+
+            return addKmlDocumentOverlay(map, kmlDocument);
+        }
+
+        public static KmlDocument parseGeoJson(String geoJson){
+            KmlDocument kmlDocument = new KmlDocument();
+            kmlDocument.parseGeoJSON(geoJson);
+            return kmlDocument;
+        }
+
+        public static FolderOverlay addKmlDocumentOverlay(MapView map, KmlDocument kmlDocument){
+            return addKmlDocumentOverlay(map, kmlDocument, map.getOverlays().size());
+        }
+
+        public static FolderOverlay addKmlDocumentOverlay(MapView map, KmlDocument kmlDocument, int index){
+            Drawable defaultMarker = AppCompatResources.getDrawable(map.getContext(), org.osmdroid.bonuspack.R.drawable.marker_default);
+            Bitmap defaultBitmap = ((BitmapDrawable) defaultMarker).getBitmap();
+            Style defaultStyle = new Style(defaultBitmap, Color.argb(125,0,0,180) , 5f, Color.argb(50,0,0,100)); // line color = 0x901010AA
+            FolderOverlay geoJsonOverlay = (FolderOverlay) kmlDocument.mKmlRoot.buildOverlay(map, defaultStyle, null, kmlDocument);
+
+            map.getOverlays().add(index, geoJsonOverlay);
+            map.invalidate();
+
+            return geoJsonOverlay;
+        }
     }
 }

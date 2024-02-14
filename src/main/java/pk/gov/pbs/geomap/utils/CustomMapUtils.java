@@ -35,11 +35,10 @@ import egolabsapps.basicodemine.offlinemap.Utils.FileUtils;
 import pk.gov.pbs.utils.ExceptionReporter;
 
 public class CustomMapUtils implements FileUtils.FileTransferListener {
-    private MapView map;
-    private CustomMapListener mapListener;
+    private final MapView map;
+    private final CustomMapListener mapListener;
     private View animatedView;
-    private Activity activity;
-    private CustomMapUtils mapUtils;
+    private final Activity activity;
     private IMapController mapController;
 
     public MapView getMap() {
@@ -49,7 +48,6 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
     public CustomMapUtils(CustomMapListener mapListener, Activity activity) {
         this.mapListener = mapListener;
         this.activity = activity;
-        mapUtils = this;
         map = new MapView(activity);
         setupMap();
     }
@@ -80,13 +78,17 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
     }
 
     private void setupMap() {
-//        map.setTileSource(TileSourceFactory.MAPNIK);
         map.setUseDataConnection(true);
         map.setMultiTouchControls(true);
         map.setMinZoomLevel(5.0);
         map.setMaxZoomLevel(19.0);
-        setMapOfflineSource();
-//        setMapOfflineSourceTest();// test function for MBTiles archive, current it is abandoned
+        if (hasOfflineSources())
+            setMapOfflineSources();
+        else {
+            map.setTileSource(TileSourceFactory.MAPNIK);
+            map.getController().setZoom(13.0);
+        }
+        //setMapOfflineSourceTest();// test function for MBTiles archive, current it is abandoned
     }
 
 
@@ -137,7 +139,7 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
                         map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
                     }
                     map.invalidate();
-                    mapListener.mapLoadSuccess(map, mapUtils);
+                    mapListener.mapLoadSuccess(map, this);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     mapListener.mapLoadFailed(ex.toString());
@@ -162,7 +164,40 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
     }
 
 
-    private void setMapOfflineSource() {
+    public static boolean hasOfflineSources(){
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/osmdroid/");
+        if (f.exists()) {
+            File[] list = f.listFiles();
+            if (list != null) {
+                List<File> mapFilesList = new ArrayList<>();
+
+                for (File aList : list) {
+                    if (aList.isDirectory()) {
+                        continue;
+                    }
+
+                    String name = aList.getName().toLowerCase();
+                    if (!name.contains(".")) {
+                        continue;
+                    }
+
+                    name = name.substring(name.lastIndexOf(".") + 1);
+                    if (name.length() == 0) {
+                        continue;
+                    }
+
+                    if (ArchiveFileFactory.isFileExtensionRegistered(name)) {
+                        mapFilesList.add(aList);
+                    }
+                }
+                return mapFilesList.size() > 0;
+            }
+        }
+
+        return false;
+    }
+
+    public void setMapOfflineSources() {
         File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/osmdroid/");
         if (f.exists()) {
             File[] list = f.listFiles();
@@ -197,7 +232,7 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
                         map.getOverlayManager().getTilesOverlay().setColorFilter(TilesOverlay.INVERT_COLORS);
                         map.setTileSource(tileSource);
                         map.invalidate();
-                        mapListener.mapLoadSuccess(map, mapUtils);
+                        mapListener.mapLoadSuccess(map, this);
                         return;
                     }
 
@@ -223,7 +258,7 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
                         map.setTileSource(TileSourceFactory.DEFAULT_TILE_SOURCE);
                     }
                     map.invalidate();
-                    mapListener.mapLoadSuccess(map, mapUtils);
+                    mapListener.mapLoadSuccess(map, this);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     mapListener.mapLoadFailed(ex.toString());
