@@ -195,6 +195,12 @@ public class CustomOfflineMapView extends OfflineMapView {
             return kmlDocument;
         }
 
+        public static KmlDocument parseGeoJson(File geoJsonFile){
+            KmlDocument kmlDocument = new KmlDocument();
+            kmlDocument.parseGeoJSON(geoJsonFile);
+            return kmlDocument;
+        }
+
         public static FolderOverlay addKmlDocumentOverlay(MapView map, KmlDocument kmlDocument){
             return addKmlDocumentOverlay(map, kmlDocument, map.getOverlays().size());
         }
