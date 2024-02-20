@@ -7,6 +7,7 @@ import org.osmdroid.bonuspack.kml.KmlFeature;
 import org.osmdroid.bonuspack.kml.KmlPlacemark;
 import org.osmdroid.util.GeoPoint;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class LocationUtils {
@@ -73,14 +74,47 @@ public final class LocationUtils {
         return getMidPoint(gPoint1.getLatitude(), gPoint1.getLongitude(), gPoint2.getLatitude(), gPoint2.getLongitude());
     }
 
+    public static GeoPoint getAccurateNearestPointFromBoundary(GeoPoint location, KmlDocument geoPolygons){
+        GeoPoint nearestPoint = null;
+        float minDist = Float.MAX_VALUE;
+
+        for (KmlFeature feature : geoPolygons.mKmlRoot.mItems){
+            KmlPlacemark placemark = (KmlPlacemark) feature;
+            if (placemark.mGeometry != null && placemark.mGeometry.mCoordinates != null && placemark.mGeometry.mCoordinates.size() > 0){
+                GeoPoint geoPoint = getNearestPointFromMultipleLines(location, placemark.mGeometry.mCoordinates);
+                float dist = getDistanceBetweenGeoPoints(location, geoPoint);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestPoint = geoPoint;
+                }
+            }
+        }
+        return nearestPoint;
+    }
+
+    public static float getAccurateDistanceFromBoundary(GeoPoint location, KmlDocument geoPolygons){
+        float minDist = Float.MAX_VALUE;
+        for (KmlFeature feature : geoPolygons.mKmlRoot.mItems){
+            KmlPlacemark placemark = (KmlPlacemark) feature;
+            if (placemark.mGeometry != null && placemark.mGeometry.mCoordinates != null && placemark.mGeometry.mCoordinates.size() > 2){
+                float dist = getDistanceBetweenGeoPoints (
+                        location, getNearestPointFromMultipleLines (
+                                location,placemark.mGeometry.mCoordinates));
+                if (dist < minDist)
+                    minDist = dist;
+            }
+        }
+        return minDist;
+    }
+
     public static float getDistanceFromBoundary(GeoPoint location, KmlDocument geoPolygons){
         float minDist = Float.MAX_VALUE;
         for (KmlFeature feature : geoPolygons.mKmlRoot.mItems){
             KmlPlacemark placemark = (KmlPlacemark) feature;
             if (placemark.mGeometry != null && placemark.mGeometry.mCoordinates != null && placemark.mGeometry.mCoordinates.size() > 2){
-                float dist = getDistanceBetweenGeoPoints(location,
-                        getNearestPointFromLine(location,
-                                getNearestLine(location, placemark.mGeometry.mCoordinates)));
+                float dist = getDistanceBetweenGeoPoints (
+                        location, getNearestPointFromMultipleLines (
+                                location, Arrays.asList(getNearestLines(location, placemark.mGeometry.mCoordinates))));
                 if (dist < minDist)
                     minDist = dist;
             }
@@ -95,8 +129,8 @@ public final class LocationUtils {
         for (KmlFeature feature : geoPolygons.mKmlRoot.mItems){
             KmlPlacemark placemark = (KmlPlacemark) feature;
             if (placemark.mGeometry != null && placemark.mGeometry.mCoordinates != null && placemark.mGeometry.mCoordinates.size() > 0){
-                GeoPoint geoPoint = getNearestPointFromLine(location,
-                        getNearestLine(location, placemark.mGeometry.mCoordinates));
+                GeoPoint geoPoint = getNearestPointFromMultipleLines(location,
+                        Arrays.asList(getNearestLines(location, placemark.mGeometry.mCoordinates)));
                 float dist = getDistanceBetweenGeoPoints(location, geoPoint);
                 if (dist < minDist) {
                     minDist = dist;
@@ -107,7 +141,21 @@ public final class LocationUtils {
         return nearestPoint;
     }
 
-    private static GeoPoint getNearestPointFromLine(GeoPoint location, GeoPoint[] lineGeoPoints){
+    private static GeoPoint getNearestPointFromMultipleLines(GeoPoint location, List<GeoPoint> lineGeoPoints){
+        GeoPoint gpX = lineGeoPoints.get(0);
+        float distX = Float.MAX_VALUE;
+        for (int i = 1; i < lineGeoPoints.size(); i++){
+            GeoPoint geoPoint = getNearestPointFromSingleLine(location, new GeoPoint[]{lineGeoPoints.get(i-1), lineGeoPoints.get(i)});
+            float distance = getDistanceBetweenGeoPoints(location, geoPoint);
+            if (distance < distX) {
+                gpX = geoPoint;
+                distX = distance;
+            }
+        }
+        return gpX;
+    }
+
+    private static GeoPoint getNearestPointFromSingleLine(GeoPoint location, GeoPoint[] lineGeoPoints){
         GeoPoint
                 gpA = lineGeoPoints[0],
                 gpB = lineGeoPoints[1],
@@ -117,12 +165,8 @@ public final class LocationUtils {
                 distB = getDistanceBetweenGeoPoints(location, gpB),
                 distX = getDistanceBetweenGeoPoints(location, gpX);
 
-        int dist = Math.round(getDistanceBetweenGeoPoints(gpA, gpB));
-        int logDis = 0;
-        for (; dist != 0; logDis++)
-            dist >>= 1;
-
-        for (int i = 0; i <= logDis; i++){
+        float distAB = getDistanceBetweenGeoPoints(gpA, gpB);
+        while (distAB >= 1.0f) {
             if (distA < distB) {
                 gpB = gpX;
                 distB = distX;
@@ -132,14 +176,24 @@ public final class LocationUtils {
             }
             gpX = getMidPoint(gpA, gpB);
             distX = getDistanceBetweenGeoPoints(location, gpX);
+            distAB = getDistanceBetweenGeoPoints(gpA, gpB);
         }
         return gpX;
     }
 
-    private static GeoPoint[] getNearestLine(GeoPoint location, List<GeoPoint> polygonPoints){
+    /**
+     * This method will return three consecutive GeoPoint (as two line segments) which are
+     * closest to given location, it automatically handles circular arrays (where first and last GeoPoint are same)
+     * @param location location from which closest line segments shall be found
+     * @param polygonPoints List of geo points (of Geo Polygon)
+     * @return array of GeoPoint with three elements
+     */
+    private static GeoPoint[] getNearestLines(GeoPoint location, List<GeoPoint> polygonPoints){
+        boolean isCircular = polygonPoints.get(0).
+                equals(polygonPoints.get(polygonPoints.size()-1));
         float minDist = Float.MAX_VALUE;
         int minInd = 0;
-        for (int i=0; i < polygonPoints.size(); i++){
+        for (int i=0; i < (isCircular ? polygonPoints.size() - 1 : polygonPoints.size()); i++){
             float[] result = new float[1];
             Location.distanceBetween(
                     location.getLatitude(),
@@ -152,32 +206,21 @@ public final class LocationUtils {
                 minInd = i;
             }
         }
-
-        float pDist, nDist;
         int pInd, nInd;
 
-        pInd = (minInd == 0) ? (polygonPoints.size() - 1) : minInd - 1;
-        nInd = (minInd == (polygonPoints.size() - 1)) ?  0 : minInd + 1;
+        if (isCircular) {
+            pInd = (minInd == 0) ? (polygonPoints.size() - 2) : minInd - 1;
+            nInd = (minInd == (polygonPoints.size() - 2)) ? 0 : minInd + 1;
+        } else {
+            pInd = (minInd == 0) ? (polygonPoints.size() - 1) : minInd - 1;
+            nInd = (minInd == (polygonPoints.size() - 1)) ? 0 : minInd + 1;
+        }
 
-        float[] result = new float[1];
-        Location.distanceBetween(
-                location.getLatitude(),
-                location.getLongitude(),
-                polygonPoints.get(pInd).getLatitude(),
-                polygonPoints.get(pInd).getLongitude(),
-                result);
-        pDist = result[0];
-
-        Location.distanceBetween(
-                location.getLatitude(),
-                location.getLongitude(),
-                polygonPoints.get(nInd).getLatitude(),
-                polygonPoints.get(nInd).getLongitude(),
-                result);
-        nDist = result[0];
-
-        return pDist < nDist ? new GeoPoint[]{polygonPoints.get(pInd), polygonPoints.get(minInd)} :
-                new GeoPoint[]{polygonPoints.get(minInd), polygonPoints.get(nInd)};
+        return new GeoPoint[]{
+                polygonPoints.get(pInd),
+                polygonPoints.get(minInd),
+                polygonPoints.get(nInd)
+        };
     }
 
     public static float getDistanceBetweenGeoPoints(GeoPoint point1, GeoPoint point2){
