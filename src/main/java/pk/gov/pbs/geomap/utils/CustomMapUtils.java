@@ -270,7 +270,7 @@ public class CustomMapUtils implements FileUtils.FileTransferListener {
                 if (!f.mkdirs())
                     Toast.makeText(activity, "Failed to create maps directory", Toast.LENGTH_SHORT).show();
             } catch (Exception e) {
-                ExceptionReporter.printStackTrace(e);
+                ExceptionReporter.handle(e);
             }
         }
     }
