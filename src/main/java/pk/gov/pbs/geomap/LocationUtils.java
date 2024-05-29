@@ -4,7 +4,10 @@ import android.location.Location;
 
 import org.osmdroid.bonuspack.kml.KmlDocument;
 import org.osmdroid.bonuspack.kml.KmlFeature;
+import org.osmdroid.bonuspack.kml.KmlGeometry;
+import org.osmdroid.bonuspack.kml.KmlMultiGeometry;
 import org.osmdroid.bonuspack.kml.KmlPlacemark;
+import org.osmdroid.bonuspack.kml.KmlPolygon;
 import org.osmdroid.util.GeoPoint;
 
 import java.util.Arrays;
@@ -48,7 +51,13 @@ public final class LocationUtils {
     public static boolean isPointInPolygon(GeoPoint p, KmlDocument kmlDocument ) {
         for (KmlFeature feature : kmlDocument.mKmlRoot.mItems) {
             KmlPlacemark placemark = (KmlPlacemark) feature;
-            if (placemark.mGeometry != null && isPointInPolygon(p, placemark.mGeometry.mCoordinates))
+            if (placemark.mGeometry != null && placemark.mGeometry instanceof KmlMultiGeometry){
+                KmlMultiGeometry multiGeometry = (KmlMultiGeometry) placemark.mGeometry;
+                for (KmlGeometry geometry : multiGeometry.mItems) {
+                    if (isPointInPolygon(p, geometry.mCoordinates))
+                        return true;
+                }
+            } else if (placemark.mGeometry != null && isPointInPolygon(p, placemark.mGeometry.mCoordinates))
                 return true;
         }
         return false;
@@ -80,7 +89,17 @@ public final class LocationUtils {
 
         for (KmlFeature feature : geoPolygons.mKmlRoot.mItems){
             KmlPlacemark placemark = (KmlPlacemark) feature;
-            if (placemark.mGeometry != null && placemark.mGeometry.mCoordinates != null && placemark.mGeometry.mCoordinates.size() > 0){
+            if (placemark.mGeometry != null && placemark.mGeometry instanceof KmlMultiGeometry){
+                KmlMultiGeometry multiGeometry = (KmlMultiGeometry) placemark.mGeometry;
+                for (KmlGeometry geometry : multiGeometry.mItems) {
+                    GeoPoint geoPoint = getNearestPointFromMultipleLines(location, geometry.mCoordinates);
+                    float dist = getDistanceBetweenGeoPoints(location, geoPoint);
+                    if (dist < minDist){
+                        minDist = dist;
+                        nearestPoint = geoPoint;
+                    }
+                }
+            } else if (placemark.mGeometry != null && placemark.mGeometry.mCoordinates != null && placemark.mGeometry.mCoordinates.size() > 0){
                 GeoPoint geoPoint = getNearestPointFromMultipleLines(location, placemark.mGeometry.mCoordinates);
                 float dist = getDistanceBetweenGeoPoints(location, geoPoint);
                 if (dist < minDist) {
